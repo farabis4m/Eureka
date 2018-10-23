@@ -42,7 +42,7 @@ open class BaseRow: BaseRowType {
     // validation state
     public internal(set) var validationErrors = [ValidationError]() {
         didSet {
-            guard validationErrors != oldValue else { return }
+            //guard validationErrors != oldValue else { return }
             RowDefaults.onRowValidationChanged["\(type(of: self))"]?(baseCell, self)
             callbackOnRowValidationChanged?()
             updateCell()

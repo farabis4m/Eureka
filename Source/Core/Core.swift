@@ -468,44 +468,46 @@ open class FormViewController: UIViewController, FormViewControllerProtocol, For
 
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        animateTableView = true
-        let selectedIndexPaths = tableView.indexPathsForSelectedRows ?? []
-        if !selectedIndexPaths.isEmpty {
-            tableView.reloadRows(at: selectedIndexPaths, with: .none)
-        }
-        selectedIndexPaths.forEach {
-            tableView.selectRow(at: $0, animated: false, scrollPosition: .none)
-        }
-
-        let deselectionAnimation = { [weak self] (context: UIViewControllerTransitionCoordinatorContext) in
+        
+        if let selectedIndexPaths = tableView?.indexPathsForSelectedRows, !selectedIndexPaths.isEmpty {
+            tableView?.reloadRows(at: selectedIndexPaths, with: .none)
             selectedIndexPaths.forEach {
-                self?.tableView.deselectRow(at: $0, animated: context.isAnimated)
+                tableView?.selectRow(at: $0, animated: false, scrollPosition: .none)
             }
-        }
-
-        let reselection = { [weak self] (context: UIViewControllerTransitionCoordinatorContext) in
-            if context.isCancelled {
+            let deselectionAnimation = { [weak self] (context: UIViewControllerTransitionCoordinatorContext) in
                 selectedIndexPaths.forEach {
-                    self?.tableView.selectRow(at: $0, animated: false, scrollPosition: .none)
+                    self?.tableView?.deselectRow(at: $0, animated: context.isAnimated)
+                }
+            }
+            
+            let reselection = { [weak self] (context: UIViewControllerTransitionCoordinatorContext) in
+                if context.isCancelled {
+                    selectedIndexPaths.forEach {
+                        self?.tableView?.selectRow(at: $0, animated: false, scrollPosition: .none)
+                    }
+                }
+            }
+            
+            if let coordinator = transitionCoordinator {
+                coordinator.animate(alongsideTransition: deselectionAnimation, completion: reselection)
+            }
+            else {
+                selectedIndexPaths.forEach {
+                    tableView?.deselectRow(at: $0, animated: false)
                 }
             }
         }
-
-        if let coordinator = transitionCoordinator {
-            coordinator.animate(alongsideTransition: deselectionAnimation, completion: reselection)
-        } else {
-            selectedIndexPaths.forEach {
-                tableView.deselectRow(at: $0, animated: false)
-            }
-        }
-
+        
+        
         NotificationCenter.default.addObserver(self, selector: #selector(FormViewController.keyboardWillShow(_:)), name: Notification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(FormViewController.keyboardWillHide(_:)), name: Notification.Name.UIKeyboardWillHide, object: nil)
-
-        if form.containsMultivaluedSection && (isBeingPresented || isMovingToParentViewController) {
-            tableView.setEditing(true, animated: false)
-        }
+        
+//        if form.containsMultivaluedSection && (isBeingPresented || isMovingToParentViewController) {
+//            tableView.setEditing(true, animated: false)
+//        }
     }
+    
+    
 
     open override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
